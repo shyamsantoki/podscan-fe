@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 10, 17, 40;
+    --background-end-rgb: 28, 37, 65;
+}
+
+@layer base {
+    body {
+        color: rgb(var(--foreground-rgb));
+        background: linear-gradient(to bottom,
+                transparent,
+                rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
+        font-family: 'Inter', sans-serif;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: 'Playfair Display', serif;
+    }
+}
+
+@layer components {
+    .luxury-card {
+        @apply bg-gradient-to-br from-luxury-lightNavy to-luxury-navy border border-luxury-gold/20 rounded-2xl shadow-luxury backdrop-blur-sm;
+    }
+
+    .luxury-button {
+        @apply bg-gradient-gold text-luxury-navy font-semibold px-6 py-3 rounded-lg hover:shadow-luxury-lg transition-all duration-300 transform hover:scale-105;
+    }
+
+    .luxury-badge {
+        @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-luxury-gold/10 text-luxury-gold border border-luxury-gold/30;
+    }
+
+    .glass-effect {
+        @apply bg-white/5 backdrop-blur-md border border-white/10;
+    }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1C2541;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #D4AF37;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #B8941F;
+}
+
+/* Smooth animations */
+* {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}

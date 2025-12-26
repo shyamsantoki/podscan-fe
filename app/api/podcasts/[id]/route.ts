@@ -20,7 +20,7 @@ export async function GET(
     if (ObjectId.isValid(id)) {
       podcast = await collection.findOne({ _id: new ObjectId(id) });
       if (podcast) {
-        const surpriseData = await surpriseCollection.find({ episode_id: await podcast.episode_id }).toArray();
+        const surpriseData = await surpriseCollection.find({ episode_id: await podcast.episode_id }).sort({ score: -1 }).toArray();
         if (surpriseData) {
           (podcast as any).facts = surpriseData;
         }
@@ -31,7 +31,7 @@ export async function GET(
     if (!podcast) {
       podcast = await collection.findOne({ episode_id: id });
       if (podcast) {
-        const surpriseData = await surpriseCollection.find({ episode_id: await podcast.episode_id }).toArray();
+        const surpriseData = await surpriseCollection.find({ episode_id: await podcast.episode_id }).sort({ score: -1 }).toArray();
         if (surpriseData) {
 
           (podcast as any).facts = surpriseData;

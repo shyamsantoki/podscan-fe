@@ -4,7 +4,8 @@ import { getDatabase } from '@/lib/mongodb';
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const limit = parseInt(searchParams.get('limit') || '20');
+
+    const limit = parseInt(searchParams.get('limit') || '10');
     const skip = parseInt(searchParams.get('skip') || '0');
 
     const db = await getDatabase();
@@ -12,7 +13,6 @@ export async function GET(request: NextRequest) {
     const facts = await db
       .collection('surprise_facts')
       .aggregate([
-        // Join with episodes
         {
           $lookup: {
             from: 'firehose_episodes',
@@ -23,7 +23,6 @@ export async function GET(request: NextRequest) {
         },
         { $unwind: '$episode' },
 
-        // Shape response
         {
           $project: {
             title: 1,
@@ -61,6 +60,8 @@ export async function GET(request: NextRequest) {
         limit,
         skip,
         hasMore: skip + limit < total,
+        currentPage: Math.floor(skip / limit) + 1,
+        totalPages: Math.ceil(total / limit),
       },
     });
   } catch (error: any) {

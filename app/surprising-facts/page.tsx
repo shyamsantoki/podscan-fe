@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 import {
     ChevronLeft,
     ChevronRight,
@@ -12,6 +13,7 @@ import {
     Radio,
     Search,
     Loader2,
+    X,
 } from 'lucide-react';
 
 interface SurprisingFact {
@@ -41,13 +43,15 @@ interface PaginationInfo {
     totalPages: number;
 }
 
-/* ---------------- Page ---------------- */
-
 export default function SurprisingFactsPage() {
+    const searchParams = useSearchParams();
+    const keywordParam = searchParams.get('keyword');
+
     const [facts, setFacts] = useState<SurprisingFact[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+    const [selectedKeyword, setSelectedKeyword] = useState(keywordParam || '');
     const [currentPage, setCurrentPage] = useState(1);
     const [factsPerPage, setFactsPerPage] = useState(10);
 
@@ -61,9 +65,15 @@ export default function SurprisingFactsPage() {
     });
 
     useEffect(() => {
+        if (keywordParam) {
+            setSelectedKeyword(keywordParam);
+        }
+    }, [keywordParam]);
+
+    useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedSearchTerm(searchTerm);
-            setCurrentPage(1); // Reset to page 1 on search
+            setCurrentPage(1);
         }, 500);
 
         return () => clearTimeout(timer);
@@ -71,7 +81,7 @@ export default function SurprisingFactsPage() {
 
     useEffect(() => {
         fetchFacts();
-    }, [currentPage, factsPerPage, debouncedSearchTerm]);
+    }, [currentPage, factsPerPage, debouncedSearchTerm, selectedKeyword]);
 
     const fetchFacts = async () => {
         setLoading(true);
@@ -82,9 +92,12 @@ export default function SurprisingFactsPage() {
                 skip: skip.toString(),
             });
 
-            // Add search parameter if exists
             if (debouncedSearchTerm.trim()) {
                 params.append('search', debouncedSearchTerm.trim());
+            }
+
+            if (selectedKeyword) {
+                params.append('keyword', selectedKeyword);
             }
 
             const response = await fetch(`/api/surprising-facts?${params}`);
@@ -118,7 +131,6 @@ export default function SurprisingFactsPage() {
         }
     };
 
-    // Generate page numbers to display
     const getPageNumbers = () => {
         const pageNumbers: (number | string)[] = [];
         const maxPagesToShow = 7;
@@ -155,6 +167,13 @@ export default function SurprisingFactsPage() {
         return pageNumbers;
     };
 
+    const clearKeywordFilter = () => {
+        setSelectedKeyword('');
+        setCurrentPage(1);
+        // Update URL without keyword parameter
+        window.history.pushState({}, '', '/surprising-facts');
+    };
+
     const indexOfFirstFact = pagination.skip + 1;
     const indexOfLastFact = Math.min(
         pagination.skip + pagination.limit,
@@ -188,7 +207,9 @@ export default function SurprisingFactsPage() {
                                 {pagination.total.toLocaleString()}
                             </div>
                             <div className="text-xs uppercase tracking-wider text-neutral-500">
-                                {debouncedSearchTerm ? 'Search Results' : 'Total Facts'}
+                                {debouncedSearchTerm || selectedKeyword
+                                    ? 'Search Results'
+                                    : 'Total Facts'}
                             </div>
                         </div>
                         <div className="text-center md:text-left">
@@ -206,6 +227,29 @@ export default function SurprisingFactsPage() {
             {/* Search and Controls */}
             <section className="bg-white border-b border-neutral-200 sticky top-0 z-40">
                 <div className="max-w-7xl mx-auto px-6 py-6">
+                    {/* Keyword Filter Badge */}
+                    {selectedKeyword && (
+                        <div className="mb-4">
+                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 text-white text-sm">
+                                <Hash className="w-4 h-4" strokeWidth={1.5} />
+                                <span>{selectedKeyword}</span>
+                                <button
+                                    onClick={clearKeywordFilter}
+                                    className="ml-2 hover:bg-neutral-700 rounded-full p-1 transition-colors"
+                                    aria-label="Clear keyword filter"
+                                >
+                                    <X className="w-3 h-3" strokeWidth={2} />
+                                </button>
+                            </div>
+                            <Link
+                                href="/keywords"
+                                className="ml-4 text-xs text-neutral-600 hover:text-neutral-900 underline"
+                            >
+                                Browse all keywords
+                            </Link>
+                        </div>
+                    )}
+
                     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                         {/* Search */}
                         <div className="relative flex-1 w-full md:max-w-md">
@@ -268,6 +312,12 @@ export default function SurprisingFactsPage() {
                                     "
                                 </span>
                             )}
+                            {selectedKeyword && !debouncedSearchTerm && (
+                                <span className="ml-2">
+                                    in keyword "
+                                    <span className="text-neutral-900">{selectedKeyword}</span>"
+                                </span>
+                            )}
                         </div>
                     )}
                 </div>
@@ -275,7 +325,6 @@ export default function SurprisingFactsPage() {
 
             {/* Main */}
             <main className="max-w-7xl mx-auto px-6 py-12">
-                {/* Loading */}
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20">
                         <div className="w-12 h-12 border border-neutral-300 border-t-neutral-900 rounded-full animate-spin mb-4" />
@@ -286,17 +335,31 @@ export default function SurprisingFactsPage() {
                 ) : facts.length === 0 ? (
                     <div className="text-center py-20">
                         <p className="text-neutral-500 text-sm mb-2">
-                            {debouncedSearchTerm
-                                ? `No facts found matching "${debouncedSearchTerm}".`
+                            {debouncedSearchTerm || selectedKeyword
+                                ? `No facts found${selectedKeyword ? ` for keyword "${selectedKeyword}"` : ''
+                                }${debouncedSearchTerm ? ` matching "${debouncedSearchTerm}"` : ''
+                                }.`
                                 : 'No surprising facts available.'}
                         </p>
-                        {debouncedSearchTerm && (
-                            <button
-                                onClick={() => setSearchTerm('')}
-                                className="text-sm text-neutral-900 underline hover:no-underline mt-4"
-                            >
-                                Clear search
-                            </button>
+                        {(debouncedSearchTerm || selectedKeyword) && (
+                            <div className="flex gap-4 justify-center mt-4">
+                                {debouncedSearchTerm && (
+                                    <button
+                                        onClick={() => setSearchTerm('')}
+                                        className="text-sm text-neutral-900 underline hover:no-underline"
+                                    >
+                                        Clear search
+                                    </button>
+                                )}
+                                {selectedKeyword && (
+                                    <button
+                                        onClick={clearKeywordFilter}
+                                        className="text-sm text-neutral-900 underline hover:no-underline"
+                                    >
+                                        Clear keyword filter
+                                    </button>
+                                )}
+                            </div>
                         )}
                     </div>
                 ) : (
@@ -310,7 +373,7 @@ export default function SurprisingFactsPage() {
                                 >
                                     {/* Podcast / Episode */}
                                     <Link
-                                        href={`/podcast/${fact.episode.episode_id}`}
+                                        href={`/podcasts/${fact.episode.episode_id}`}
                                         className="flex gap-6 mb-8 group"
                                     >
                                         <div className="relative w-20 h-20 bg-neutral-100 flex-shrink-0">
@@ -386,12 +449,18 @@ export default function SurprisingFactsPage() {
 
                                             <div className="flex flex-wrap gap-3">
                                                 {fact.keywords.map((keyword, idx) => (
-                                                    <span
+                                                    <Link
                                                         key={idx}
-                                                        className="px-4 py-2 text-xs text-neutral-700 border border-neutral-300 bg-white"
+                                                        href={`/surprising-facts?keyword=${encodeURIComponent(
+                                                            keyword
+                                                        )}`}
+                                                        className={`px-4 py-2 text-xs border transition-colors ${keyword === selectedKeyword
+                                                                ? 'bg-neutral-900 text-white border-neutral-900'
+                                                                : 'text-neutral-700 border-neutral-300 bg-white hover:border-neutral-900'
+                                                            }`}
                                                     >
                                                         {keyword}
-                                                    </span>
+                                                    </Link>
                                                 ))}
                                             </div>
                                         </div>
@@ -404,7 +473,6 @@ export default function SurprisingFactsPage() {
                         {pagination.totalPages > 1 && (
                             <div className="space-y-6">
                                 <nav className="flex items-center justify-center gap-2">
-                                    {/* Previous Button */}
                                     <button
                                         onClick={goToPreviousPage}
                                         disabled={currentPage === 1}
@@ -417,7 +485,6 @@ export default function SurprisingFactsPage() {
                                         />
                                     </button>
 
-                                    {/* Page Numbers */}
                                     {getPageNumbers().map((pageNumber, index) => (
                                         <React.Fragment key={index}>
                                             {pageNumber === '...' ? (
@@ -438,7 +505,6 @@ export default function SurprisingFactsPage() {
                                         </React.Fragment>
                                     ))}
 
-                                    {/* Next Button */}
                                     <button
                                         onClick={goToNextPage}
                                         disabled={!pagination.hasMore}
@@ -452,7 +518,6 @@ export default function SurprisingFactsPage() {
                                     </button>
                                 </nav>
 
-                                {/* Page info */}
                                 <div className="text-center">
                                     <p className="text-xs text-neutral-500">
                                         Page {currentPage} of {pagination.totalPages}

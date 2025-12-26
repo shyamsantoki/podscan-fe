@@ -92,3 +92,14 @@ export interface PodcastData {
     processed: boolean;
   };
 }
+
+export interface SurpriseData {
+  _id: ObjectId;
+  title: string;
+  explanation: string;
+  score: number;
+  quotes: string[];
+  keywords: string[];
+  podcast_id: string;
+  episode_id: string;
+}

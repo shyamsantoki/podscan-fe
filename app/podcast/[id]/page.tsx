@@ -23,14 +23,22 @@ import {
     BarChart3,
     CheckCircle2,
     XCircle,
+    Lightbulb,
+    Quote,
+    Sparkles,
 } from 'lucide-react';
-import { PodcastData } from '@/types/podcast';
+import { PodcastData, SurpriseData } from '@/types/podcast';
 import { format } from 'date-fns';
+
+// Extended type to include the facts field added by the API
+interface PodcastDataWithFacts extends PodcastData {
+    facts?: SurpriseData[];
+}
 
 export default function PodcastDetailPage() {
     const params = useParams();
     const router = useRouter();
-    const [podcast, setPodcast] = useState<PodcastData | null>(null);
+    const [podcast, setPodcast] = useState<PodcastDataWithFacts | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -265,6 +273,95 @@ export default function PodcastDetailPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* Surprising Facts Section */}
+                {Array.isArray(podcast.facts) && podcast.facts.length > 0 && (
+                    <section className="bg-white border border-neutral-200 p-12 mb-8">
+                        <div className="flex items-center gap-3 mb-10">
+                            <Sparkles className="w-4 h-4 text-neutral-400" strokeWidth={1.5} />
+                            <h2 className="text-xs uppercase tracking-wider text-neutral-500 font-medium">
+                                Surprising Facts
+                            </h2>
+                        </div>
+
+                        <div className="space-y-16">
+                            {podcast.facts.map((fact, factIdx) => (
+                                <article key={factIdx}>
+                                    {/* Title + Score */}
+                                    <div className="flex items-start justify-between gap-8 mb-6">
+                                        <h3 className="text-2xl font-light text-neutral-900 leading-snug">
+                                            {fact.title}
+                                        </h3>
+
+                                        {fact.score != null && (
+                                            <div className="flex items-center gap-2 px-4 py-2 border border-neutral-300 bg-white">
+                                                <Lightbulb className="w-4 h-4 text-neutral-600" strokeWidth={1.5} />
+                                                <span className="text-sm font-medium text-neutral-900">
+                                                    {fact.score.toFixed(1)} / 10
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Explanation */}
+                                    {fact.explanation && (
+                                        <p className="text-sm leading-relaxed text-neutral-700 mb-8">
+                                            {fact.explanation}
+                                        </p>
+                                    )}
+
+                                    {/* Quotes */}
+                                    {fact.quotes?.length > 0 && (
+                                        <div className="mb-10">
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <Quote className="w-4 h-4 text-neutral-500" strokeWidth={1.5} />
+                                                <h4 className="text-xs uppercase tracking-wider text-neutral-500 font-medium">
+                                                    Notable Quotes
+                                                </h4>
+                                            </div>
+
+                                            <div className="space-y-5">
+                                                {fact.quotes.map((quote, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className="border-l-2 border-neutral-300 pl-6 py-1"
+                                                    >
+                                                        <p className="text-sm text-neutral-700 leading-relaxed">
+                                                            “{quote}”
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Keywords */}
+                                    {fact.keywords?.length > 0 && (
+                                        <div className="pt-6 border-t border-neutral-200">
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <Hash className="w-4 h-4 text-neutral-500" strokeWidth={1.5} />
+                                                <h4 className="text-xs uppercase tracking-wider text-neutral-500 font-medium">
+                                                    Related Keywords
+                                                </h4>
+                                            </div>
+
+                                            <div className="flex flex-wrap gap-3">
+                                                {fact.keywords.map((keyword, idx) => (
+                                                    <span
+                                                        key={idx}
+                                                        className="px-4 py-2 text-xs text-neutral-700 border border-neutral-300 bg-white"
+                                                    >
+                                                        {keyword}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </article>
+                            ))}
+                        </div>
+                    </section>
+                )}
 
                 {/* Ratings Comparison */}
                 <section className="bg-white border border-neutral-200 p-12 mb-8">

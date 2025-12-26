@@ -373,7 +373,7 @@ export default function SurprisingFactsPage() {
                                 >
                                     {/* Podcast / Episode */}
                                     <Link
-                                        href={`/podcasts/${fact.episode.episode_id}`}
+                                        href={`/podcast/${fact.episode.episode_id}`}
                                         className="flex gap-6 mb-8 group"
                                     >
                                         <div className="relative w-20 h-20 bg-neutral-100 flex-shrink-0">

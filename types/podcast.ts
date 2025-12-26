@@ -103,3 +103,21 @@ export interface SurpriseData {
   podcast_id: string;
   episode_id: string;
 }
+
+export interface SurprisingFact {
+  _id: string;
+  title: string;
+  explanation: string;
+  score: number;
+  quotes: string[];
+  keywords: string[];
+  podcast: {
+    podcast_id: string;
+    podcast_name: string;
+    podcast_image: string;
+  };
+  episode: {
+    episode_id: string;
+    episode_title: string;
+  };
+}
